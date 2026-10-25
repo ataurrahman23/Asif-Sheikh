@@ -1,0 +1,141 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        (request.auth.token.email == 'asifjony2022@gmail.com' && request.auth.token.email_verified == true) ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if isOwner(userId) &&
+        isValidId(userId) &&
+        incoming().userId == userId &&
+        incoming().role == 'user' &&
+        incoming().name is string && incoming().name.size() <= 128 &&
+        incoming().email is string && incoming().email.size() <= 256;
+      allow update: if (isOwner(userId) &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['name', 'phone', 'photoURL', 'updatedAt']) &&
+        incoming().name is string && incoming().name.size() <= 128) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Donors collection - Publicly readable for searching blood donors
+    match /donors/{donorId} {
+      allow read: if true;
+      allow create: if isSignedIn() &&
+        isValidId(donorId) &&
+        incoming().userId == request.auth.uid &&
+        incoming().donorId == donorId &&
+        incoming().isVerified == false &&
+        incoming().name is string && incoming().name.size() <= 128 &&
+        incoming().bloodGroup in ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] &&
+        incoming().district is string && incoming().district.size() <= 64 &&
+        incoming().upazila is string && incoming().upazila.size() <= 64;
+      allow update: if (
+        // Donor updating their own availability and profile (cannot touch isVerified, verifiedBy, verifiedAt)
+        (isSignedIn() && existing().userId == request.auth.uid &&
+         incoming().userId == existing().userId &&
+         incoming().isVerified == existing().isVerified &&
+         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'age', 'district', 'upazila', 'area', 'address', 'phone', 'isPhonePublic', 'lastDonationDate', 'totalDonations', 'isAvailable', 'availabilityStatus', 'lastStatusUpdate', 'bio', 'photoURL', 'consentToPublish', 'updatedAt'])) ||
+        // Admin verification and moderation
+        isAdmin()
+      );
+      allow delete: if (isSignedIn() && existing().userId == request.auth.uid) || isAdmin();
+    }
+
+    // Emergency Requests
+    match /emergency_requests/{requestId} {
+      allow read: if true;
+      allow create: if isSignedIn() &&
+        isValidId(requestId) &&
+        incoming().requestId == requestId &&
+        incoming().userId == request.auth.uid &&
+        incoming().patientName is string && incoming().patientName.size() <= 128 &&
+        incoming().bloodGroup in ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] &&
+        incoming().status in ['open', 'in_progress', 'under_review'];
+      allow update: if (
+        // Requester can update details or close request
+        (isSignedIn() && existing().userId == request.auth.uid &&
+         incoming().userId == existing().userId &&
+         incoming().diff(existing()).affectedKeys().hasOnly(['status', 'notes', 'units', 'hospitalName', 'contactPhone', 'requiredDate', 'urgency', 'updatedAt'])) ||
+        isAdmin()
+      );
+      allow delete: if (isSignedIn() && existing().userId == request.auth.uid) || isAdmin();
+    }
+
+    // Ratings & Reviews
+    match /ratings/{ratingId} {
+      allow read: if true;
+      allow create: if isSignedIn() &&
+        isValidId(ratingId) &&
+        incoming().ratingId == ratingId &&
+        incoming().raterUserId == request.auth.uid &&
+        incoming().rating >= 1 && incoming().rating <= 5;
+      allow update: if (isSignedIn() && existing().raterUserId == request.auth.uid &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['rating', 'review', 'updatedAt'])) || isAdmin();
+      allow delete: if (isSignedIn() && existing().raterUserId == request.auth.uid) || isAdmin();
+    }
+
+    // Reports - submitted by authenticated users, only readable by admin
+    match /reports/{reportId} {
+      allow create: if isSignedIn() &&
+        isValidId(reportId) &&
+        incoming().reportId == reportId &&
+        incoming().reporterUserId == request.auth.uid &&
+        incoming().status == 'pending' &&
+        incoming().reason in ['ভুল তথ্য বা ভুয়া প্রোফাইল', 'রক্তের জন্য টাকা দাবি', 'হয়রানি বা অসদাচরণ', 'ভুল রক্তদানের তথ্য', 'ভুয়া জরুরি অনুরোধ', 'অন্যান্য'];
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Hospitals Directory - public read, admin write
+    match /hospitals/{hospitalId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Audit logs - admin only read and create
+    match /audit_logs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update, delete: if false; // Immutable audit trail
+    }
+
+    // Settings - public read, admin write
+    match /settings/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

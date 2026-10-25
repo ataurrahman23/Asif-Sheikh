@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Hind Siliguri', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  }
+}
+
+/* Custom smooth scroll and subtle focus outlines */
+:focus-visible {
+  outline: 2px solid #dc2626;
+  outline-offset: 2px;
+}

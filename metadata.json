@@ -1,0 +1,8 @@
+{
+  "name": "Tarail Blood Bank BD",
+  "description": "তারাইল ব্লাড ব্যাংক (Tarail Blood Bank) — সহজে রক্তদাতা খুঁজুন, জরুরি রক্তের অনুরোধ জানান এবং রক্তদান কমিউনিটিতে যুক্ত হোন।",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

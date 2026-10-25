@@ -1,0 +1,204 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User account document for authentication and private profile storage",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 256 },
+        "name": { "type": "string", "maxLength": 128 },
+        "role": { "type": "string", "enum": ["user", "donor", "admin"] },
+        "phone": { "type": "string", "maxLength": 32 },
+        "photoURL": { "type": "string", "maxLength": 1024 },
+        "isSuspended": { "type": "boolean" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["userId", "email", "name", "role", "createdAt"]
+    },
+    "Donor": {
+      "title": "Donor",
+      "description": "Public and searchable blood donor profile",
+      "type": "object",
+      "properties": {
+        "donorId": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 128 },
+        "bloodGroup": { "type": "string", "enum": ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] },
+        "age": { "type": "number" },
+        "district": { "type": "string", "maxLength": 64 },
+        "upazila": { "type": "string", "maxLength": 64 },
+        "area": { "type": "string", "maxLength": 128 },
+        "address": { "type": "string", "maxLength": 256 },
+        "phone": { "type": "string", "maxLength": 32 },
+        "isPhonePublic": { "type": "boolean" },
+        "lastDonationDate": { "type": "string", "maxLength": 32 },
+        "totalDonations": { "type": "number" },
+        "isDonationCountVerified": { "type": "boolean" },
+        "isAvailable": { "type": "boolean" },
+        "availabilityStatus": { "type": "string", "enum": ["available", "temporarily_unavailable", "needs_update"] },
+        "lastStatusUpdate": { "type": "string" },
+        "isVerified": { "type": "boolean" },
+        "verifiedAt": { "type": "string" },
+        "verifiedBy": { "type": "string", "maxLength": 128 },
+        "bio": { "type": "string", "maxLength": 500 },
+        "photoURL": { "type": "string", "maxLength": 1024 },
+        "consentToPublish": { "type": "boolean" },
+        "averageRating": { "type": "number" },
+        "ratingCount": { "type": "number" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["donorId", "userId", "name", "bloodGroup", "district", "upazila", "isPhonePublic", "consentToPublish"]
+    },
+    "EmergencyRequest": {
+      "title": "EmergencyRequest",
+      "description": "Emergency blood requests submitted by patients or attendants",
+      "type": "object",
+      "properties": {
+        "requestId": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "patientName": { "type": "string", "maxLength": 128 },
+        "bloodGroup": { "type": "string", "enum": ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] },
+        "units": { "type": "number" },
+        "hospitalName": { "type": "string", "maxLength": 128 },
+        "district": { "type": "string", "maxLength": 64 },
+        "upazila": { "type": "string", "maxLength": 64 },
+        "area": { "type": "string", "maxLength": 128 },
+        "requiredDate": { "type": "string", "maxLength": 64 },
+        "urgency": { "type": "string", "enum": ["emergency", "today", "tomorrow", "scheduled"] },
+        "contactPhone": { "type": "string", "maxLength": 32 },
+        "notes": { "type": "string", "maxLength": 1000 },
+        "status": { "type": "string", "enum": ["open", "in_progress", "fulfilled", "closed", "under_review"] },
+        "consentToPublish": { "type": "boolean" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["requestId", "patientName", "bloodGroup", "hospitalName", "contactPhone", "urgency", "status"]
+    },
+    "Rating": {
+      "title": "Rating",
+      "description": "Authenticated user rating and review for an eligible blood donor",
+      "type": "object",
+      "properties": {
+        "ratingId": { "type": "string", "maxLength": 128 },
+        "donorId": { "type": "string", "maxLength": 128 },
+        "raterUserId": { "type": "string", "maxLength": 128 },
+        "raterName": { "type": "string", "maxLength": 128 },
+        "rating": { "type": "number" },
+        "review": { "type": "string", "maxLength": 500 },
+        "isModerated": { "type": "boolean" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["ratingId", "donorId", "raterUserId", "rating", "createdAt"]
+    },
+    "Report": {
+      "title": "Report",
+      "description": "User safety report regarding inappropriate profiles, money demands, or fake requests",
+      "type": "object",
+      "properties": {
+        "reportId": { "type": "string", "maxLength": 128 },
+        "reporterUserId": { "type": "string", "maxLength": 128 },
+        "reporterEmail": { "type": "string", "maxLength": 256 },
+        "targetType": { "type": "string", "enum": ["donor", "request"] },
+        "targetId": { "type": "string", "maxLength": 128 },
+        "reason": { "type": "string", "maxLength": 256 },
+        "description": { "type": "string", "maxLength": 1000 },
+        "status": { "type": "string", "enum": ["pending", "resolved", "dismissed"] },
+        "actionTaken": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string" },
+        "resolvedAt": { "type": "string" },
+        "resolvedBy": { "type": "string", "maxLength": 128 }
+      },
+      "required": ["reportId", "reporterUserId", "targetType", "targetId", "reason", "status", "createdAt"]
+    },
+    "Hospital": {
+      "title": "Hospital",
+      "description": "Verified directory of hospitals, clinics, and blood transfusion centers",
+      "type": "object",
+      "properties": {
+        "hospitalId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 128 },
+        "type": { "type": "string", "enum": ["hospital", "clinic", "blood_bank", "red_crescent"] },
+        "address": { "type": "string", "maxLength": 256 },
+        "upazila": { "type": "string", "maxLength": 64 },
+        "district": { "type": "string", "maxLength": 64 },
+        "phone": { "type": "string", "maxLength": 64 },
+        "openingHours": { "type": "string", "maxLength": 128 },
+        "website": { "type": "string", "maxLength": 512 },
+        "mapUrl": { "type": "string", "maxLength": 512 },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["hospitalId", "name", "address", "upazila", "district", "phone"]
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "Administrative audit trail of verification and moderation operations",
+      "type": "object",
+      "properties": {
+        "logId": { "type": "string", "maxLength": 128 },
+        "adminUserId": { "type": "string", "maxLength": 128 },
+        "adminEmail": { "type": "string", "maxLength": 256 },
+        "actionType": { "type": "string", "maxLength": 64 },
+        "targetId": { "type": "string", "maxLength": 128 },
+        "details": { "type": "string", "maxLength": 1000 },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["logId", "adminUserId", "actionType", "timestamp"]
+    },
+    "Settings": {
+      "title": "Settings",
+      "description": "System and developer portfolio configuration",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "developerName": { "type": "string", "maxLength": 128 },
+        "developerPhoto": { "type": "string", "maxLength": 512 },
+        "developerBio": { "type": "string", "maxLength": 1000 },
+        "portfolioUrl": { "type": "string", "maxLength": 512 },
+        "githubUrl": { "type": "string", "maxLength": 512 },
+        "facebookUrl": { "type": "string", "maxLength": 512 },
+        "linkedinUrl": { "type": "string", "maxLength": 512 },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Private user account records"
+    },
+    "/donors/{donorId}": {
+      "schema": { "$ref": "#/entities/Donor" },
+      "description": "Publicly searchable blood donor profiles"
+    },
+    "/emergency_requests/{requestId}": {
+      "schema": { "$ref": "#/entities/EmergencyRequest" },
+      "description": "Urgent public blood donation requests"
+    },
+    "/ratings/{ratingId}": {
+      "schema": { "$ref": "#/entities/Rating" },
+      "description": "User reviews and ratings for blood donors"
+    },
+    "/reports/{reportId}": {
+      "schema": { "$ref": "#/entities/Report" },
+      "description": "Security and fraud reports under admin review"
+    },
+    "/hospitals/{hospitalId}": {
+      "schema": { "$ref": "#/entities/Hospital" },
+      "description": "Verified hospital and blood donation centers directory"
+    },
+    "/audit_logs/{logId}": {
+      "schema": { "$ref": "#/entities/AuditLog" },
+      "description": "Administrative action logs"
+    },
+    "/settings/{id}": {
+      "schema": { "$ref": "#/entities/Settings" },
+      "description": "Site and developer portfolio configuration"
+    }
+  }
+}
